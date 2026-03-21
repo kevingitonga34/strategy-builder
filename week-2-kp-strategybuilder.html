@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDIN 5140: Kirkpatrick Strategy Builder</title>
+    <style>
+        :root {
+            --webster-blue: #003567;
+            --webster-yellow: #FFD200;
+            --light-gray: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        header {
+            background-color: var(--webster-blue);
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        /* Progress Dots */
+        .progress-bar {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            justify-content: space-between;
+        }
+
+        .step-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .step-dot.active {
+            background: var(--webster-yellow);
+            color: var(--webster-blue);
+            box-shadow: 0 0 0 4px rgba(255, 210, 0, 0.2);
+        }
+
+        /* Content Areas */
+        .content { padding: 2rem; min-height: 400px; }
+
+        .panel { display: none; animation: fadeIn 0.3s ease; }
+        .panel.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Scenario Cards */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .scenario-card {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .scenario-card:hover {
+            border-color: var(--webster-blue);
+            background: #f0f7ff;
+        }
+
+        .scenario-card.selected {
+            border-color: var(--webster-blue);
+            background: #eef6ff;
+            box-shadow: inset 0 0 0 1px var(--webster-blue);
+        }
+
+        .scenario-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: var(--webster-blue);
+        }
+
+        .scenario-card p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* Forms */
+        .instruction-banner {
+            background: #eff6ff;
+            border-left: 4px solid var(--webster-blue);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group { margin-bottom: 1.5rem; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #334155;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            min-height: 80px;
+        }
+
+        .context-helper {
+            font-size: 0.8rem;
+            background: #f8fafc;
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            color: #475569;
+            border-left: 2px solid #94a3b8;
+        }
+
+        /* Nav */
+        .nav-footer {
+            padding: 1.5rem 2rem;
+            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--webster-blue); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .btn-ghost { background: transparent; color: #64748b; }
+
+        /* Report Styles */
+        .summary-box {
+            border: 2px solid var(--webster-blue);
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: white;
+        }
+
+        .summary-header {
+            text-align: center;
+            border-bottom: 2px solid var(--webster-yellow);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .summary-item { margin-bottom: 12px; }
+        .summary-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #94a3b8; }
+        .summary-text { font-size: 0.9rem; margin-top: 2px; }
+
+        .app-footer {
+            text-align: right;
+            font-size: 10px;
+            font-style: italic;
+            color: #94a3b8;
+            padding: 1rem 2rem;
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .container { box-shadow: none; border: none; }
+            .nav-footer, .progress-bar, .instruction-banner, .panel:not(#step-5) { display: none !important; }
+            #step-5 { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Kirkpatrick Level Strategy Builder</h1>
+        <div class="subtitle">EDIN 5140 Evaluation of Training Programs</div>
+    </header>
+
+    <div class="progress-bar">
+        <div class="step-dot active">S</div>
+        <div class="step-dot">4</div>
+        <div class="step-dot">3</div>
+        <div class="step-dot">2</div>
+        <div class="step-dot">1</div>
+        <div class="step-dot">R</div>
+    </div>
+
+    <div class="content">
+        <!-- STEP 0: Scenario Selection -->
+        <div class="panel active" id="step-0">
+            <div class="instruction-banner">
+                <strong>Instructions:</strong> Select one training scenario below to begin your evaluation strategy. Remember, we use "Backwards Planning" starting from Level 4 results.
+            </div>
+            
+            <div class="scenario-grid">
+                <div class="scenario-card" onclick="selectScenario('Customer Service Revamp', 'Target: Net Promoter Score (NPS) has dropped by 15%. Focus on empathy and technical troubleshooting.', 'Decrease in customer complaints within 3 months.')">
+                    <h3>Customer Experience</h3>
+                    <p>Help a call center improve empathy scores to recover a falling NPS.</p>
+                </div>
+                <div class="scenario-card" onclick="selectScenario('New CRM Software Implementation', 'Target: Reduce data entry errors and increase sales pipeline visibility.', '100% of sales staff using the system correctly by end of Q2.')">
+                    <h3>Software Rollout</h3>
+                    <p>Ensure sales teams transition successfully to a complex new database.</p>
+                </div>
+                <div class="scenario-card" onclick="selectScenario('New Manager Onboarding', 'Target: High turnover in junior staff reporting to new managers.', 'Reduction in junior staff resignation letters.')">
+                    <h3>Leadership Skills</h3>
+                    <p>Equip new supervisors with feedback skills to improve staff retention.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 1: Level 4 Results -->
+        <div class="panel" id="step-1">
+            <h2 style="color:var(--webster-blue); margin-top:0;">Level 4: Results</h2>
+            <div class="instruction-banner">
+                Principle: "The end is the beginning." Identify the ultimate business goal.
+            </div>
+            
+            <div class="input-group">
+                <label>The "Flag at the Top" (Business Outcome):</label>
+                <textarea id="l4_result" oninput="saveText('l4_result', this.value)"></textarea>
+                <div class="context-helper" id="helper-l4">Scenario Tip: Think about the core problem identified in your selected case.</div>
+            </div>
+
+            <div class="input-group">
+                <label>Leading Indicators:</label>
+                <textarea id="l4_indicator" oninput="saveText('l4_indicator', this.value)" placeholder="What short-term metrics prove progress?"></textarea>
+            </div>
+        </div>
+
+        <!-- STEP 2: Level 3 Behavior -->
+        <div class="panel" id="step-2">
+            <h2 style="color:var(--webster-blue); margin-top:0;">Level 3: Behavior</h2>
+            <div class="instruction-banner">
+                The "Great Divide": What actions must happen on the job to hit the results?
+            </div>
+            
+            <div class="input-group">
+                <label>Critical Behaviors:</label>
+                <textarea id="l3_behavior" oninput="saveText('l3_behavior', this.value)" placeholder="Specific actions employees must perform back at work."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>Required Drivers (Post-Training Support):</label>
+                <textarea id="l3_drivers" oninput="saveText('l3_drivers', this.value)" placeholder="How will managers reinforce this?"></textarea>
+            </div>
+        </div>
+
+        <!-- STEP 3: Level 2 Learning -->
+        <div class="panel" id="step-3">
+            <h2 style="color:var(--webster-blue); margin-top:0;">Level 2: Learning</h2>
+            <div class="instruction-banner">
+                Focus on more than just knowledge. Include Confidence and Commitment.
+            </div>
+            
+            <div class="input-group">
+                <label>Knowledge & Skills Required:</label>
+                <textarea id="l2_learning" oninput="saveText('l2_learning', this.value)"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>Confidence & Commitment Goal:</label>
+                <textarea id="l2_confidence" oninput="saveText('l2_confidence', this.value)" placeholder="How will we know they feel they CAN apply this?"></textarea>
+            </div>
+        </div>
+
+        <!-- STEP 4: Level 1 Reaction -->
+        <div class="panel" id="step-4">
+            <h2 style="color:var(--webster-blue); margin-top:0;">Level 1: Reaction</h2>
+            <div class="instruction-banner">
+                Shift from "Smile Sheets" to "Relevance."
+            </div>
+            
+            <div class="input-group">
+                <label>Establishing Relevance:</label>
+                <textarea id="l1_relevance" oninput="saveText('l1_relevance', this.value)" placeholder="How will the training prove it is worth the learner's time?"></textarea>
+            </div>
+        </div>
+
+        <!-- STEP 5: Final Report -->
+        <div class="panel" id="step-5">
+            <div class="summary-box" id="print-area">
+                <div class="summary-header">
+                    <h2 id="sum-title" style="margin:0; color:var(--webster-blue);">Strategy Report</h2>
+                    <p style="margin:0; font-size: 0.8rem; font-style: italic;">Kirkpatrick Backwards-Planned Strategy</p>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="summary-item">
+                        <div class="summary-label">Level 4 Result</div>
+                        <div class="summary-text" id="out-l4_result">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Leading Indicators</div>
+                        <div class="summary-text" id="out-l4_indicator">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Level 3 Behavior</div>
+                        <div class="summary-text" id="out-l3_behavior">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Support Drivers</div>
+                        <div class="summary-text" id="out-l3_drivers">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Level 2 Learning</div>
+                        <div class="summary-text" id="out-l2_learning">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Confidence Target</div>
+                        <div class="summary-text" id="out-l2_confidence">-</div>
+                    </div>
+                    <div class="summary-item" style="grid-column: span 2;">
+                        <div class="summary-label">Level 1 Relevance Goal</div>
+                        <div class="summary-text" id="out-l1_relevance">-</div>
+                    </div>
+                </div>
+
+                <p style="font-size: 10px; color: #94a3b8; text-align:center; border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 15px;">
+                    Student: Take a screen capture or print this report for the Week 2 Discussion.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-footer">
+        <button class="btn-ghost" id="btn-back" onclick="navigate(-1)" style="visibility:hidden;">Back</button>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: bold;" id="step-indicator-text">STEP 1 OF 6</span>
+        <button class="btn-primary" id="btn-next" onclick="navigate(1)" disabled>Select a Scenario</button>
+        <button class="btn-primary" id="btn-print" onclick="window.print()" style="display:none;">Print / Capture</button>
+    </div>
+
+    <div class="app-footer">
+        created by Dr. Basiyr D. Rodney for EDIN 5140 Spring 2026
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const steps = document.querySelectorAll('.panel');
+    const dots = document.querySelectorAll('.step-dot');
+    let selectedScenario = "";
+
+    function selectScenario(name, context, result) {
+        selectedScenario = name;
+        document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+        
+        // Auto-fill some hints
+        document.getElementById('sum-title').innerText = name + " Strategy";
+        document.getElementById('helper-l4').innerText = "Scenario Context: " + context;
+        document.getElementById('l4_result').placeholder = "e.g. " + result;
+        
+        document.getElementById('btn-next').disabled = false;
+        document.getElementById('btn-next').innerText = "Start Strategy Builder";
+    }
+
+    function saveText(id, val) {
+        document.getElementById('out-' + id).innerText = val || "-";
+    }
+
+    function navigate(direction) {
+        steps[currentStep].classList.remove('active');
+        dots[currentStep].classList.remove('active');
+
+        currentStep += direction;
+
+        steps[currentStep].classList.add('active');
+        dots[currentStep].classList.add('active');
+
+        // Toggle UI elements
+        document.getElementById('btn-back').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+        
+        if (currentStep === 0) {
+            document.getElementById('btn-next').innerText = "Start Strategy Builder";
+        } else if (currentStep === steps.length - 1) {
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-print').style.display = 'block';
+        } else {
+            document.getElementById('btn-next').style.display = 'block';
+            document.getElementById('btn-next').innerText = "Next Step";
+            document.getElementById('btn-print').style.display = 'none';
+        }
+
+        document.getElementById('step-indicator-text').innerText = `STEP ${currentStep + 1} OF ${steps.length}`;
+    }
+</script>
+
+</body>
+</html>
